@@ -75,7 +75,7 @@
   const FS = `
     precision mediump float;
     varying vec3 vNormal; varying vec3 vWorld;
-    uniform vec3 uColor, uEye; uniform float uSelected;
+    uniform vec3 uColor, uEye; uniform float uSelected, uAlpha;
     void main(){
       vec3 N = normalize(vNormal);
       vec3 V = normalize(uEye - vWorld);
@@ -91,7 +91,7 @@
       col = mix(col, vec3(0.90,0.34,0.18), uSelected * 0.14);
       col += vec3(0.08,0.06,0.05) * uSelected;
       col *= 0.90 + 0.10 * smoothstep(-0.6, 0.3, vWorld.y);
-      gl_FragColor = vec4(col, 1.0);
+      gl_FragColor = vec4(col, uAlpha);
     }`;
 
   function compile(type, src) {
@@ -105,7 +105,7 @@
   gl.linkProgram(prog); gl.useProgram(prog);
 
   const loc = {};
-  ['aPos', 'aNormal', 'uProj', 'uView', 'uOffset', 'uColor', 'uEye', 'uSelected'].forEach(n => {
+  ['aPos', 'aNormal', 'uProj', 'uView', 'uOffset', 'uColor', 'uEye', 'uSelected', 'uAlpha'].forEach(n => {
     loc[n] = n[0] === 'a' ? gl.getAttribLocation(prog, n) : gl.getUniformLocation(prog, n);
   });
 
@@ -176,7 +176,7 @@
       gl.bindBuffer(gl.ARRAY_BUFFER, norBuf);
       gl.bufferData(gl.ARRAY_BUFFER, p.normals, gl.STATIC_DRAW);
       return Object.assign({}, p, {
-        posBuf, norBuf, dir: conf.dir, max: conf.max, label: conf.label, visible: true,
+        posBuf, norBuf, dir: conf.dir, max: conf.max, label: conf.label, visible: true, alpha: 1, transparent: false,
         offset: 0, target: 0
       });
     });
@@ -235,13 +235,12 @@
     gl.uniformMatrix4fv(loc.uView, false, view);
     gl.uniform3fv(loc.uEye, eye);
 
-    for (const p of PARTS) {
-      if (!p.visible) continue;
+    function paint(p) {
       const o = offsetVec(p);
       gl.uniform3fv(loc.uOffset, o);
       gl.uniform3fv(loc.uColor, p.color);
       gl.uniform1f(loc.uSelected, p === selected ? 1 : 0);
-
+      gl.uniform1f(loc.uAlpha, p.alpha);
       gl.bindBuffer(gl.ARRAY_BUFFER, p.posBuf);
       gl.enableVertexAttribArray(loc.aPos);
       gl.vertexAttribPointer(loc.aPos, 3, gl.FLOAT, false, 0, 0);
@@ -250,6 +249,17 @@
       gl.vertexAttribPointer(loc.aNormal, 3, gl.FLOAT, false, 0, 0);
       gl.drawArrays(gl.TRIANGLES, 0, p.count);
     }
+
+    gl.disable(gl.BLEND);
+    gl.depthMask(true);
+    for (const p of PARTS) { if (p.visible && p.alpha >= 1) paint(p); }
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.depthMask(false);
+    for (const p of PARTS) { if (p.visible && p.alpha < 1) paint(p); }
+    gl.depthMask(true);
+    gl.disable(gl.BLEND);
   }
 
   /* ---------- пикинг ---------- */
@@ -344,7 +354,22 @@
     if (slider && syncSlider !== false) slider.value = String(Math.round(p.offset * 1000));
     if (sliderName) sliderName.textContent = p.label;
     refreshVisibilityUI();
+    syncGhost();
   }
+
+  const ghostBtn = document.getElementById('box-ghost');
+
+  function syncGhost() {
+    if (ghostBtn) ghostBtn.classList.toggle('is-active', !!(selected && selected.alpha < 1));
+  }
+
+  if (ghostBtn) ghostBtn.addEventListener('click', () => {
+    if (!selected) return;
+    selected.alpha = selected.alpha < 1 ? 1 : 0.45;
+    syncGhost();
+    state.lastInteract = performance.now();
+    start();
+  });
 
   const toggleBtn = document.getElementById('box-toggle-visible');
   const showAllBtn = document.getElementById('box-show-all');

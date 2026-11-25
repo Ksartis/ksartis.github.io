@@ -22,7 +22,7 @@
 <meta name="twitter:image" content="https://ksartis.github.io/og-image.jpg">
 <link rel="canonical" href="https://ksartis.github.io/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="style.css?v=20261127n">
+<link rel="stylesheet" href="style.css?v=20261127p">
 </head>
 <body>
 <a class="skip" href="#works">Перейти к примерам работ</a>
@@ -95,14 +95,28 @@
 
           <div class="box-bar" id="box-bar" hidden>
             <button class="box-bar__handle" id="box-toggle-bar" type="button" aria-label="Свернуть панель" aria-expanded="true">⌄</button>
+
             <div class="box-bar__parts" id="box-parts"></div>
-            <div class="box-bar__row">
-              <span class="box-bar__name" id="box-part-name">Деталь</span>
-              <input type="range" id="box-slider" min="0" max="1000" value="0" aria-label="Выдвинуть деталь">
+
+            <div class="box-bar__part">
+              <div class="box-bar__cap">Деталь: <b id="box-part-name">—</b></div>
+              <div class="box-bar__part-row">
+                <input type="range" id="box-slider" min="0" max="1000" value="0" aria-label="Выдвинуть деталь">
+                <button class="box-bar__ghost" id="box-ghost" type="button" title="Полупрозрачность" aria-label="Полупрозрачность">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>
+                  </svg>
+                </button>
+                <button class="btn btn--ghost btn--sm" id="box-toggle-visible" type="button">Скрыть</button>
+              </div>
+            </div>
+
+            <div class="box-bar__group">
+              <span class="box-bar__cap">Вся сборка</span>
               <div class="box-bar__actions">
                 <button class="btn btn--accent btn--sm" id="explode-all" type="button">Разобрать</button>
                 <button class="btn btn--ghost btn--sm" id="explode-reset" type="button">Собрать</button>
-                <button class="btn btn--ghost btn--sm" id="box-toggle-visible" type="button">Скрыть</button>
                 <button class="btn btn--ghost btn--sm" id="box-show-all" type="button" disabled>Показать все</button>
               </div>
             </div>
@@ -253,8 +267,8 @@
   </figure>
 </div>
 
-<script src="viewer.js?v=20261127n"></script>
-<script src="box-viewer.js?v=20261127n"></script>
-<script src="app.js?v=20261127n"></script>
+<script src="viewer.js?v=20261127p"></script>
+<script src="box-viewer.js?v=20261127p"></script>
+<script src="app.js?v=20261127p"></script>
 </body>
 </html>

@@ -244,6 +244,15 @@ button { font: inherit; cursor: pointer; }
 .viewer.is-bar-collapsed .box-bar { max-height: 34px; }
 
 .box-bar__parts { display: flex; gap: 6px; flex-wrap: wrap; width: min(760px, 100%); margin-inline: auto; }
+.box-bar__part, .box-bar__group { width: min(760px, 100%); margin-inline: auto; }
+.box-bar__part { border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; display: grid; gap: 6px; background: #fff; }
+.box-bar__part-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.box-bar__group { display: grid; gap: 6px; }
+.box-bar__cap {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted);
+}
+.box-bar__cap b { font-family: var(--font); font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--ink); }
 .part-chip {
   border: 1px solid var(--line-strong); background: #fff; color: var(--ink-2);
   border-radius: 999px; padding: 6px 11px; font-size: 12px;
@@ -257,6 +266,13 @@ button { font: inherit; cursor: pointer; }
   text-transform: uppercase; color: var(--muted); min-width: 92px;
 }
 #box-slider { flex: 1 1 180px; min-width: 120px; accent-color: var(--accent); }
+.box-bar__ghost {
+  flex: 0 0 auto; width: 34px; height: 34px; padding: 0;
+  border: 1px solid var(--line-strong); border-radius: 10px;
+  background: #fff; color: var(--ink-2); display: grid; place-items: center;
+}
+.box-bar__ghost svg { width: 16px; height: 16px; }
+.box-bar__ghost.is-active { background: var(--ink); color: #fff; border-color: var(--ink); }
 .box-bar__actions { display: flex; gap: 6px; flex: 0 0 auto; flex-wrap: wrap; }
 .btn--sm { min-height: 38px; padding: 0 16px; font-size: 13px; }
 canvas[hidden] { display: none !important; }
@@ -412,7 +428,7 @@ canvas[hidden] { display: none !important; }
   .box-bar { overflow-y: auto; }
   .box-bar__parts { flex-wrap: wrap; }
 
-  .box-bar__row { flex-wrap: wrap; }
+  .box-bar__actions .btn:last-child { grid-column: 1 / -1; }
   .box-bar__name { display: none; }
   .box-bar__actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .box-bar__actions .btn { width: 100%; }
