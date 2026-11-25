@@ -231,7 +231,23 @@
   }
 
   let prev = performance.now();
+  let running = false;
+  let rafId = 0;
+
+  function start() {
+    if (running) return;
+    running = true;
+    prev = performance.now();
+    rafId = requestAnimationFrame(loop);
+  }
+  function stop() {
+    running = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = 0;
+  }
+
   function loop(now) {
+    if (!running) return;
     const dt = Math.min((now - prev) / 1000, 0.05);
     prev = now;
 
@@ -252,7 +268,7 @@
     if (now - state.lastInteract > 4000 && !reduceMotion) state.auto = true;
 
     draw();
-    requestAnimationFrame(loop);
+    rafId = requestAnimationFrame(loop);
   }
 
   /* ---------- управление ---------- */
@@ -323,8 +339,12 @@
   canvas.addEventListener('touchend', () => { pinchStart = 0; }, { passive: true });
 
   /* ---------- загрузка ---------- */
-  fetch(host.dataset.model || '/models/otvod.glb')
+  fetch(host.dataset.model || 'models/otvod.glb')
     .then(r => { if (!r.ok) throw new Error('нет модели'); return r.arrayBuffer(); })
-    .then(buf => { upload(parseGlb(buf)); requestAnimationFrame(loop); })
+    .then(buf => { upload(parseGlb(buf)); start(); })
     .catch(() => { host.classList.add('viewer--fallback'); });
+
+  document.addEventListener('ks-view', (e) => {
+    if (e.detail === 'model') start(); else stop();
+  });
 })();

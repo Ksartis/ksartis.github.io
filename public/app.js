@@ -254,6 +254,37 @@ async function loadSettings() {
   }
 }
 
+/* ---------- 3D tabs ---------- */
+const viewTabs = $$('.viewer__tab');
+const modelCanvas = $('#viewer-canvas');
+const boxCanvas = $('#box-canvas');
+const boxTools = $('#box-tools');
+const badge = $('[data-badge]');
+
+function set3DView(view) {
+  viewTabs.forEach(t => {
+    const active = t.dataset.view === view;
+    t.classList.toggle('is-active', active);
+    t.setAttribute('aria-selected', String(active));
+  });
+  if (modelCanvas) modelCanvas.hidden = view !== 'model';
+  if (boxCanvas) boxCanvas.hidden = view !== 'box';
+  if (boxTools) boxTools.hidden = view !== 'box';
+  if (badge) badge.textContent = view === 'box' ? '3D · клик по детали' : '3D · вращайте';
+  document.dispatchEvent(new CustomEvent('ks-view', { detail: view }));
+}
+
+viewTabs.forEach(t => t.addEventListener('click', () => set3DView(t.dataset.view)));
+if (viewTabs.length) set3DView('model');
+
+// для проверки: /?view=box открывает разборку
+const params = new URLSearchParams(location.search);
+if (params.get('view') === 'box') {
+  set3DView('box');
+  const all = document.getElementById('explode-all');
+  if (all) all.click();
+}
+
 /* ---------- init ---------- */
 const yearEl = $('#year');
 if (yearEl) yearEl.textContent = '© ' + new Date().getFullYear();

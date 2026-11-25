@@ -66,8 +66,21 @@
       </div>
       <div class="hero__media">
         <div class="viewer" id="viewer" data-model="models/otvod.glb">
-          <canvas id="viewer-canvas" aria-label="Интерактивная 3D-модель отливки"></canvas>
-          <span class="viewer__badge">3D · вращайте</span>
+          <canvas id="viewer-canvas" aria-label="3D-модель отливки"></canvas>
+          <canvas id="box-canvas" aria-label="3D-модель стержневого ящика" hidden></canvas>
+
+          <span class="viewer__badge" data-badge>3D · вращайте</span>
+
+          <div class="viewer__tabs" role="tablist" aria-label="3D-режим">
+            <button class="viewer__tab is-active" type="button" data-view="model" role="tab" aria-selected="true">Модель</button>
+            <button class="viewer__tab" type="button" data-view="box" role="tab" aria-selected="false">Разборка</button>
+          </div>
+
+          <div class="viewer__tools" id="box-tools" hidden>
+            <button class="btn btn--accent btn--sm" id="explode-all" type="button">Разобрать</button>
+            <button class="btn btn--ghost btn--sm" id="explode-reset" type="button">Собрать</button>
+          </div>
+
           <div class="viewer__fallback">
             <img src="img/clean-01.jpg" alt="Отливка — 3D-модель">
           </div>
@@ -213,6 +226,7 @@
 </div>
 
 <script src="viewer.js"></script>
+<script src="box-viewer.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
