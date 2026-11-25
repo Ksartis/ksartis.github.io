@@ -219,6 +219,17 @@ button { font: inherit; cursor: pointer; }
   backdrop-filter: blur(6px);
 }
 .box-bar[hidden] { display: none !important; }
+.box-bar__handle {
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  width: 58px; height: 22px; border-radius: 999px;
+  border: 0; background: var(--ink); color: #fff;
+  font-size: 13px; line-height: 1; display: grid; place-items: center; z-index: 5;
+  box-shadow: 0 2px 8px rgba(20,22,26,.18);
+}
+.viewer.is-bar-collapsed .box-bar { padding: 12px 12px 8px; }
+.viewer.is-bar-collapsed .box-bar__parts,
+.viewer.is-bar-collapsed .box-bar__row { display: none; }
+.viewer.is-box.is-bar-collapsed #box-canvas { bottom: 52px; }
 .box-bar__parts { display: flex; gap: 6px; flex-wrap: wrap; width: min(760px, 100%); margin-inline: auto; }
 .part-chip {
   border: 1px solid var(--line-strong); background: #fff; color: var(--ink-2);

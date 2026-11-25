@@ -362,6 +362,17 @@
     });
   }
 
+  const barHandle = document.getElementById('box-toggle-bar');
+  if (barHandle) {
+    barHandle.addEventListener('click', () => {
+      const collapsed = host.classList.toggle('is-bar-collapsed');
+      barHandle.textContent = collapsed ? '⌃' : '⌄';
+      barHandle.setAttribute('aria-expanded', String(!collapsed));
+      barHandle.setAttribute('aria-label', collapsed ? 'Развернуть панель' : 'Свернуть панель');
+      state.lastInteract = performance.now();
+    });
+  }
+
   /* ---------- мышь / тач ---------- */
   function localXY(e) {
     const r = canvas.getBoundingClientRect();

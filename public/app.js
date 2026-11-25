@@ -270,7 +270,12 @@ function set3DView(view) {
   if (modelCanvas) modelCanvas.hidden = view !== 'model';
   if (boxCanvas) boxCanvas.hidden = view !== 'box';
   if (viewerHost) viewerHost.classList.toggle('is-box', view === 'box');
-  if (badge) badge.textContent = view === 'box' ? '3D · тяните — поворот' : '3D · вращайте';
+  if (badge) {
+    const short = window.innerWidth < 560;
+    badge.textContent = view === 'box'
+      ? (short ? '3D' : '3D · тяните — поворот')
+      : (short ? '3D' : '3D · вращайте');
+  }
   document.dispatchEvent(new CustomEvent('ks-view', { detail: view }));
 }
 
@@ -280,6 +285,7 @@ if (viewTabs.length) set3DView('model');
 // параметры для проверки: /?view=box, /?fs=1
 const params = new URLSearchParams(location.search);
 if (params.get('fs') === '1' && viewerHost) viewerHost.classList.add('is-fs');
+if (params.get('bar') === '0' && viewerHost) viewerHost.classList.add('is-bar-collapsed');
 
 if (params.get('view') === 'box') {
   set3DView('box');
