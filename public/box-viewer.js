@@ -88,7 +88,11 @@
       col += vec3(0.86,0.90,1.0) * rim * 0.20;
       float spec = pow(max(dot(normalize(L1+V), N), 0.0), 44.0);
       col += vec3(1.0) * spec * 0.18;
-      col = mix(col, vec3(0.90,0.34,0.18), uSelected * 0.14);
+      if (uAlpha < 0.99) {
+        col *= 0.86;
+        col += vec3(0.55, 0.60, 0.72) * rim * 0.45;
+      }
+      col = mix(col, vec3(0.90,0.34,0.18), uSelected * (uAlpha < 0.99 ? 0.06 : 0.14));
       col += vec3(0.08,0.06,0.05) * uSelected;
       col *= 0.90 + 0.10 * smoothstep(-0.6, 0.3, vWorld.y);
       gl_FragColor = vec4(col, uAlpha);
@@ -365,7 +369,7 @@
 
   if (ghostBtn) ghostBtn.addEventListener('click', () => {
     if (!selected) return;
-    selected.alpha = selected.alpha < 1 ? 1 : 0.45;
+    selected.alpha = selected.alpha < 1 ? 1 : 0.75;
     syncGhost();
     state.lastInteract = performance.now();
     start();
