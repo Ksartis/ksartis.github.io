@@ -415,11 +415,40 @@
     state.lastInteract = performance.now();
   }
 
-  canvas.addEventListener('pointerdown', onDown);
-  canvas.addEventListener('pointermove', onMove);
+  canvas.addEventListener('pointerdown', (e) => { if (pinching || (e.pointerType === 'touch' && !e.isPrimary)) return; onDown(e); });
+  canvas.addEventListener('pointermove', (e) => { if (pinching) return; onMove(e); });
   canvas.addEventListener('pointerup', onUp);
   canvas.addEventListener('pointercancel', onUp);
   canvas.addEventListener('wheel', onWheel, { passive: false });
+
+  /* пинч двумя пальцами */
+  let pinchStart = 0, pinchDist = 0, pinching = false;
+  canvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      pinching = true;
+      state.mode = null;
+      pinchStart = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      pinchDist = state.targetDist;
+      state.auto = false;
+      state.lastInteract = performance.now();
+    }
+  }, { passive: true });
+  canvas.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && pinchStart > 0) {
+      const d = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      state.targetDist = Math.max(2.8, Math.min(7.5, pinchDist * (pinchStart / Math.max(d, 1))));
+      state.lastInteract = performance.now();
+    }
+  }, { passive: true });
+  canvas.addEventListener('touchend', (e) => {
+    if (!e.touches || e.touches.length < 2) { pinching = false; pinchStart = 0; }
+  }, { passive: true });
 
   /* ---------- кнопки ---------- */
   const allBtn = document.getElementById('explode-all');
