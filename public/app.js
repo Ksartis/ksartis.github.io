@@ -296,6 +296,7 @@ if (params.get('view') === 'box') {
   document.dispatchEvent(new CustomEvent('ks-explode'));
 }
 if (params.get('bar') === '1') document.dispatchEvent(new CustomEvent('ks-bar', { detail: false }));
+if (params.get('hide') === '1') setTimeout(() => { const b = document.getElementById('box-toggle-visible'); if (b) b.click(); }, 1500);
 
 /* ---------- полный экран ---------- */
 const fsBtn = $('#viewer-fs');
