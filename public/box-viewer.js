@@ -1,5 +1,5 @@
 'use strict';
-/* Интерактивная разборка стержневого ящика: стенки, основание, крышка, отъёмная часть, стержень. */
+/* Интерактивная разборка стержневого ящика: каждая деталь собрана из примитивов. */
 
 (function () {
   const host = document.getElementById('box-viewer') || document.getElementById('viewer');
@@ -40,14 +40,6 @@
     }
     return o;
   }
-  function modelMatrix(cx, cy, cz, sx, sy, sz) {
-    return new Float32Array([
-      sx, 0, 0, 0,
-      0, sy, 0, 0,
-      0, 0, sz, 0,
-      cx, cy, cz, 1
-    ]);
-  }
 
   /* ---------- шейдеры ---------- */
   const VS = `
@@ -75,17 +67,19 @@
     void main() {
       vec3 N = normalize(vNormal);
       vec3 V = normalize(uEye - vWorld);
-      vec3 L1 = normalize(vec3(0.55, 0.85, 0.65));
-      vec3 L2 = normalize(vec3(-0.75, 0.25, 0.45));
-      vec3 L3 = normalize(vec3(0.0, -0.9, 0.2));
+      vec3 L1 = normalize(vec3(0.55, 0.90, 0.60));
+      vec3 L2 = normalize(vec3(-0.80, 0.20, 0.40));
+      vec3 L3 = normalize(vec3(0.10, -0.85, 0.25));
       float d1 = max(dot(N, L1), 0.0);
       float d2 = max(dot(N, L2), 0.0);
       float d3 = max(dot(N, L3), 0.0);
-      vec3 col = uColor * (0.32 + 0.92 * d1 + 0.30 * d2 + 0.10 * d3);
-      float rim = pow(1.0 - max(dot(N, V), 0.0), 2.5);
-      col += vec3(0.85, 0.90, 1.0) * rim * 0.22;
-      float spec = pow(max(dot(normalize(L1 + V), N), 0.0), 40.0);
-      col += vec3(1.0) * spec * 0.18;
+      vec3 col = uColor * (0.34 + 0.90 * d1 + 0.28 * d2 + 0.10 * d3);
+      float rim = pow(1.0 - max(dot(N, V), 0.0), 2.2);
+      col += vec3(0.86, 0.90, 1.0) * rim * 0.20;
+      float spec = pow(max(dot(normalize(L1 + V), N), 0.0), 44.0);
+      col += vec3(1.0) * spec * 0.20;
+      // затемнение у нижней части деталей — мягкая «тень»
+      col *= 0.90 + 0.10 * smoothstep(-0.55, 0.25, vWorld.y);
       gl_FragColor = vec4(col, 1.0);
     }
   `;
@@ -115,7 +109,6 @@
 
   /* ---------- куб ---------- */
   const faces = [
-    // нормаль, 4 вершины (обход)
     [[0, 0, 1], [[-0.5, -0.5, 0.5], [0.5, -0.5, 0.5], [0.5, 0.5, 0.5], [-0.5, 0.5, 0.5]]],
     [[0, 0, -1], [[0.5, -0.5, -0.5], [-0.5, -0.5, -0.5], [-0.5, 0.5, -0.5], [0.5, 0.5, -0.5]]],
     [[1, 0, 0], [[0.5, -0.5, 0.5], [0.5, -0.5, -0.5], [0.5, 0.5, -0.5], [0.5, 0.5, 0.5]]],
@@ -127,31 +120,128 @@
   for (const [n, quad] of faces) {
     const [a, b, c, d] = quad;
     for (const tri of [[a, b, c], [a, c, d]]) {
-      for (const v of tri) { verts.push(v[0], v[1], v[2], n[0], n[1], n[2]); }
+      for (const v of tri) verts.push(v[0], v[1], v[2], n[0], n[1], n[2]);
     }
   }
-  const meshData = new Float32Array(verts);
   const vbuf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vbuf);
-  gl.bufferData(gl.ARRAY_BUFFER, meshData, gl.STATIC_DRAW);
-  const STRIDE = 6 * 4;
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
+  const STRIDE = 24;
 
-  /* ---------- сборка ящика ---------- */
-  // pos — центр, size — габарит, dir — куда разъезжается, dist — насколько
+  /* ---------- геометрия ящика ---------- */
+  // Считаем от стержня: полость ящика = габарит стержня + зазор
+  const T = 0.10;              // толщина стенок
+  const CORE_X = 1.18;         // стержень: ширина
+  const CORE_Z = 0.88;         // стержень: глубина
+  const CORE_H = 0.47;         // стержень: высота
+  const GAP = 0.01;            // зазор на сторону
+
+  const IN_X = CORE_X + 2 * GAP;   // 1.20 — полость по X
+  const IN_Z = CORE_Z + 2 * GAP;   // 0.90 — полость по Z
+  const OUT_X = IN_X + 2 * T;      // 1.40
+  const OUT_Z = IN_Z + 2 * T;      // 1.10
+
+  const BASE_H = 0.07;
+  const H = 0.50;                  // высота стенок
+  const baseTop = -0.325;
+  const baseMid = baseTop - BASE_H / 2;
+  const wallMid = baseTop + H / 2;
+  const coverBottom = baseTop + H;
+  const coverMid = coverBottom + BASE_H / 2;
+
+  const STEEL = [0.66, 0.68, 0.72];
+  const STEEL_DARK = [0.56, 0.58, 0.62];
+  const ACCENT = [0.90, 0.34, 0.18];
+  const SAND = [0.78, 0.68, 0.46];
+
   const PARTS = [
-    { name: 'Основание', pos: [0, -0.42, 0], size: [1.30, 0.10, 0.95], color: [0.62, 0.63, 0.67], dir: [0, -1, 0], dist: 0.42 },
-    { name: 'Задняя стенка', pos: [0, -0.05, -0.42], size: [1.30, 0.64, 0.10], color: [0.68, 0.69, 0.72], dir: [0, 0, -1], dist: 0.46 },
-    { name: 'Левая стенка', pos: [-0.60, -0.05, 0], size: [0.10, 0.64, 0.95], color: [0.68, 0.69, 0.72], dir: [-1, 0, 0], dist: 0.46 },
-    { name: 'Правая стенка', pos: [0.60, -0.05, 0], size: [0.10, 0.64, 0.95], color: [0.68, 0.69, 0.72], dir: [1, 0, 0], dist: 0.46 },
-    { name: 'Отъёмная часть', pos: [0, -0.05, 0.42], size: [1.30, 0.64, 0.10], color: [0.90, 0.34, 0.18], dir: [0, 0, 1], dist: 0.56 },
-    { name: 'Крышка', pos: [0, 0.30, 0], size: [1.36, 0.10, 1.00], color: [0.74, 0.75, 0.78], dir: [0, 1, 0], dist: 0.46 },
-    { name: 'Стержень', pos: [0, -0.12, 0], size: [0.86, 0.34, 0.58], color: [0.76, 0.66, 0.45], dir: [0, 0.4, 0], dist: 0.18 }
+    {
+      name: 'Основание', color: STEEL_DARK, pos: [0, baseMid, 0], dir: [0, -1, 0], dist: 0.44,
+      boxes: [
+        { c: [0, 0, 0], s: [OUT_X + 0.04, BASE_H, OUT_Z + 0.04] },
+        { c: [-0.58, -BASE_H / 2 - 0.02, -0.44], s: [0.12, 0.04, 0.12] },
+        { c: [0.58, -BASE_H / 2 - 0.02, -0.44], s: [0.12, 0.04, 0.12] },
+        { c: [-0.58, -BASE_H / 2 - 0.02, 0.44], s: [0.12, 0.04, 0.12] },
+        { c: [0.58, -BASE_H / 2 - 0.02, 0.44], s: [0.12, 0.04, 0.12] }
+      ]
+    },
+    {
+      // наружная стенка: панель + рёбра снаружи (внутрь не заходят)
+      name: 'Левая стенка', color: STEEL, pos: [-(IN_X / 2 + T / 2), wallMid, 0], dir: [-1, 0, 0], dist: 0.56,
+      boxes: [
+        { c: [0, 0, 0], s: [T, H, IN_Z] },
+        { c: [-T / 2 - 0.025, 0, -0.38], s: [0.05, H - 0.05, 0.06] },
+        { c: [-T / 2 - 0.025, 0, -0.13], s: [0.05, H - 0.05, 0.06] },
+        { c: [-T / 2 - 0.025, 0, 0.13], s: [0.05, H - 0.05, 0.06] },
+        { c: [-T / 2 - 0.025, 0, 0.38], s: [0.05, H - 0.05, 0.06] },
+        { c: [0, H / 2 - 0.02, 0], s: [T + 0.03, 0.04, IN_Z] }
+      ]
+    },
+    {
+      name: 'Правая стенка', color: STEEL, pos: [(IN_X / 2 + T / 2), wallMid, 0], dir: [1, 0, 0], dist: 0.56,
+      boxes: [
+        { c: [0, 0, 0], s: [T, H, IN_Z] },
+        { c: [T / 2 + 0.025, 0, -0.38], s: [0.05, H - 0.05, 0.06] },
+        { c: [T / 2 + 0.025, 0, -0.13], s: [0.05, H - 0.05, 0.06] },
+        { c: [T / 2 + 0.025, 0, 0.13], s: [0.05, H - 0.05, 0.06] },
+        { c: [T / 2 + 0.025, 0, 0.38], s: [0.05, H - 0.05, 0.06] },
+        { c: [0, H / 2 - 0.02, 0], s: [T + 0.03, 0.04, IN_Z] }
+      ]
+    },
+    {
+      name: 'Задняя стенка', color: STEEL, pos: [0, wallMid, -(IN_Z / 2 + T / 2)], dir: [0, 0, -1], dist: 0.56,
+      boxes: [
+        { c: [0, 0, 0], s: [IN_X, H, T] },
+        { c: [-0.35, 0, -T / 2 - 0.025], s: [0.06, H - 0.05, 0.05] },
+        { c: [0, 0, -T / 2 - 0.025], s: [0.06, H - 0.05, 0.05] },
+        { c: [0.35, 0, -T / 2 - 0.025], s: [0.06, H - 0.05, 0.05] },
+        { c: [0, H / 2 - 0.02, 0], s: [IN_X, 0.04, T + 0.03] }
+      ]
+    },
+    {
+      name: 'Отъёмная часть', color: ACCENT, pos: [0, wallMid, IN_Z / 2 + T / 2], dir: [0, 0, 1], dist: 0.64,
+      boxes: [
+        { c: [0, 0, 0], s: [IN_X, H, T] },
+        { c: [-0.34, 0.02, 0.10], s: [0.16, 0.05, 0.08] },
+        { c: [0.34, 0.02, 0.10], s: [0.16, 0.05, 0.08] },
+        { c: [-0.34, 0.02, 0.16], s: [0.05, 0.05, 0.05] },
+        { c: [0.34, 0.02, 0.16], s: [0.05, 0.05, 0.05] },
+        { c: [-0.50, -0.16, -0.06], s: [0.05, 0.06, 0.08] },
+        { c: [0.50, -0.16, -0.06], s: [0.05, 0.06, 0.08] }
+      ]
+    },
+    {
+      name: 'Крышка', color: [0.74, 0.75, 0.78], pos: [0, coverMid, 0], dir: [0, 1, 0], dist: 0.52,
+      boxes: [
+        { c: [0, 0, 0], s: [OUT_X + 0.04, BASE_H, OUT_Z + 0.04] },
+        { c: [-0.60, -BASE_H / 2 - 0.015, -0.48], s: [0.10, 0.03, 0.10] },
+        { c: [0.60, -BASE_H / 2 - 0.015, -0.48], s: [0.10, 0.03, 0.10] },
+        { c: [-0.60, -BASE_H / 2 - 0.015, 0.48], s: [0.10, 0.03, 0.10] },
+        { c: [0.60, -BASE_H / 2 - 0.015, 0.48], s: [0.10, 0.03, 0.10] },
+        { c: [0, BASE_H / 2 + 0.03, 0], s: [0.38, 0.05, 0.14] },
+        { c: [-0.12, BASE_H / 2 + 0.07, 0], s: [0.05, 0.04, 0.10] },
+        { c: [0.12, BASE_H / 2 + 0.07, 0], s: [0.05, 0.04, 0.10] }
+      ]
+    },
+    {
+      // стержень по габариту полости: 1.18 x 0.88, высота 0.43 + бобышка
+      name: 'Стержень', color: SAND, pos: [0, baseTop + CORE_H / 2, 0], dir: [0, 1, 0], dist: 0.30,
+      boxes: [
+        { c: [0, 0, 0], s: [CORE_X, CORE_H, CORE_Z] },
+        { c: [0, 0.25, 0], s: [0.34, 0.03, 0.26] },
+        { c: [-0.46, CORE_H / 2 + 0.015, -0.32], s: [0.08, 0.03, 0.08] },
+        { c: [0.46, CORE_H / 2 + 0.015, -0.32], s: [0.08, 0.03, 0.08] },
+        { c: [-0.46, CORE_H / 2 + 0.015, 0.32], s: [0.08, 0.03, 0.08] },
+        { c: [0.46, CORE_H / 2 + 0.015, 0.32], s: [0.08, 0.03, 0.08] }
+      ]
+    }
   ];
-  for (const p of PARTS) { p.progress = 0; p.target = 0; p.base = [p.pos[0], p.pos[1], p.pos[2]]; }
+
+  for (const p of PARTS) { p.progress = 0; p.target = 0; }
 
   /* ---------- состояние ---------- */
   const state = {
-    yaw: 0.62, pitch: 0.42, dist: 4.2, targetDist: 4.2,
+    yaw: 0.62, pitch: 0.38, dist: 4.7, targetDist: 4.7,
     dragging: false, lastX: 0, lastY: 0, moved: 0,
     auto: true, lastInteract: 0
   };
@@ -169,6 +259,10 @@
   function offsetOf(p) {
     return [p.dir[0] * p.dist * p.progress, p.dir[1] * p.dist * p.progress, p.dir[2] * p.dist * p.progress];
   }
+  function boxCenter(p, b) {
+    const o = offsetOf(p);
+    return [p.pos[0] + o[0] + b.c[0], p.pos[1] + o[1] + b.c[1], p.pos[2] + o[2] + b.c[2]];
+  }
 
   function draw() {
     resize();
@@ -181,7 +275,7 @@
     const aspect = canvas.width / Math.max(canvas.height, 1);
     const proj = perspective(34 * Math.PI / 180, aspect, 0.05, 60);
     const cp = Math.cos(state.pitch), sp = Math.sin(state.pitch);
-    const eye = [state.dist * cp * Math.sin(state.yaw), state.dist * sp + 0.05, state.dist * cp * Math.cos(state.yaw)];
+    const eye = [state.dist * cp * Math.sin(state.yaw), state.dist * sp + 0.02, state.dist * cp * Math.cos(state.yaw)];
     const view = lookAt(eye, [0, 0, 0], [0, 1, 0]);
 
     gl.useProgram(prog);
@@ -189,36 +283,32 @@
     gl.uniformMatrix4fv(loc.uView, false, view);
     gl.uniform3fv(loc.uEye, eye);
 
-    for (const p of PARTS) {
-      const o = offsetOf(p);
-      const m = modelMatrix(p.base[0] + o[0], p.base[1] + o[1], p.base[2] + o[2], p.size[0], p.size[1], p.size[2]);
-      const nm = new Float32Array([1 / p.size[0], 0, 0, 0, 1 / p.size[1], 0, 0, 0, 1 / p.size[2]]);
-      gl.uniformMatrix4fv(loc.uModel, false, m);
-      gl.uniformMatrix3fv(loc.uNormalMat, false, nm);
-      gl.uniform3fv(loc.uColor, p.color);
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbuf);
+    gl.enableVertexAttribArray(loc.aPos);
+    gl.vertexAttribPointer(loc.aPos, 3, gl.FLOAT, false, STRIDE, 0);
+    gl.enableVertexAttribArray(loc.aNormal);
+    gl.vertexAttribPointer(loc.aNormal, 3, gl.FLOAT, false, STRIDE, 12);
 
-      gl.bindBuffer(gl.ARRAY_BUFFER, vbuf);
-      gl.enableVertexAttribArray(loc.aPos);
-      gl.vertexAttribPointer(loc.aPos, 3, gl.FLOAT, false, STRIDE, 0);
-      gl.enableVertexAttribArray(loc.aNormal);
-      gl.vertexAttribPointer(loc.aNormal, 3, gl.FLOAT, false, STRIDE, 12);
-      gl.drawArrays(gl.TRIANGLES, 0, 36);
+    for (const p of PARTS) {
+      gl.uniform3fv(loc.uColor, p.color);
+      for (const b of p.boxes) {
+        const c = boxCenter(p, b);
+        const m = new Float32Array([
+          b.s[0], 0, 0, 0,
+          0, b.s[1], 0, 0,
+          0, 0, b.s[2], 0,
+          c[0], c[1], c[2], 1
+        ]);
+        const nm = new Float32Array([1 / b.s[0], 0, 0, 0, 1 / b.s[1], 0, 0, 0, 1 / b.s[2]]);
+        gl.uniformMatrix4fv(loc.uModel, false, m);
+        gl.uniformMatrix3fv(loc.uNormalMat, false, nm);
+        gl.drawArrays(gl.TRIANGLES, 0, 36);
+      }
     }
     return { eye, proj, view };
   }
 
-  /* ---------- клик по детали ---------- */
-  function rayFrom(eye, proj, view, ndcX, ndcY) {
-    // обратная матрица proj*view
-    const m = multiply(proj, view);
-    const inv = invert(m);
-    if (!inv) return null;
-    const p0 = transform(inv, [ndcX, ndcY, -1, 1]);
-    const p1 = transform(inv, [ndcX, ndcY, 1, 1]);
-    const d = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
-    const len = Math.hypot(d[0], d[1], d[2]) || 1;
-    return { o: [p0[0], p0[1], p0[2]], d: [d[0] / len, d[1] / len, d[2] / len] };
-  }
+  /* ---------- клик ---------- */
   function transform(m, v) {
     return [
       m[0] * v[0] + m[4] * v[1] + m[8] * v[2] + m[12] * v[3],
@@ -227,8 +317,7 @@
       m[3] * v[0] + m[7] * v[1] + m[11] * v[2] + m[15] * v[3]
     ];
   }
-  function invert(m) {
-    const a = m;
+  function invert(a) {
     const b00 = a[0] * a[5] - a[1] * a[4];
     const b01 = a[0] * a[6] - a[2] * a[4];
     const b02 = a[0] * a[7] - a[3] * a[4];
@@ -306,30 +395,35 @@
     state.lastInteract = performance.now();
     if (wasDrag) return;
 
-    // клик — выбрать деталь
     const rect = canvas.getBoundingClientRect();
     const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     const ndcY = 1 - ((e.clientY - rect.top) / rect.height) * 2;
+
     const cp = Math.cos(state.pitch), sp = Math.sin(state.pitch);
-    const eye = [state.dist * cp * Math.sin(state.yaw), state.dist * sp + 0.05, state.dist * cp * Math.cos(state.yaw)];
+    const eye = [state.dist * cp * Math.sin(state.yaw), state.dist * sp + 0.02, state.dist * cp * Math.cos(state.yaw)];
     const proj = perspective(34 * Math.PI / 180, canvas.width / Math.max(canvas.height, 1), 0.05, 60);
     const view = lookAt(eye, [0, 0, 0], [0, 1, 0]);
-    const ray = rayFrom(eye, proj, view, ndcX, ndcY);
-    if (!ray) return;
+    const inv = invert(multiply(proj, view));
+    if (!inv) return;
+    const p0 = transform(inv, [ndcX, ndcY, -1, 1]);
+    const p1 = transform(inv, [ndcX, ndcY, 1, 1]);
+    const d = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
+    const len = Math.hypot(d[0], d[1], d[2]) || 1;
+    const ray = { o: [p0[0], p0[1], p0[2]], d: [d[0] / len, d[1] / len, d[2] / len] };
 
     let best = null, bestT = Infinity;
     for (const p of PARTS) {
-      const o = offsetOf(p);
-      const c = [p.base[0] + o[0], p.base[1] + o[1], p.base[2] + o[2]];
-      const t = rayBox(ray.o, ray.d, c, p.size);
-      if (t < bestT) { bestT = t; best = p; }
+      for (const b of p.boxes) {
+        const t = rayBox(ray.o, ray.d, boxCenter(p, b), b.s);
+        if (t < bestT) { bestT = t; best = p; }
+      }
     }
     if (best) { best.target = best.target > 0.5 ? 0 : 1; state.auto = false; }
   }
   function onWheel(e) {
     e.preventDefault();
     state.auto = false;
-    state.targetDist = Math.max(2.8, Math.min(7.0, state.targetDist * Math.exp(e.deltaY * 0.0012)));
+    state.targetDist = Math.max(3.0, Math.min(8.0, state.targetDist * Math.exp(e.deltaY * 0.0012)));
     state.lastInteract = performance.now();
   }
 
@@ -349,7 +443,7 @@
   canvas.addEventListener('touchmove', (e) => {
     if (e.touches.length === 2 && pinchStart > 0) {
       const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-      state.targetDist = Math.max(2.8, Math.min(7.0, pinchDist * (pinchStart / Math.max(d, 1))));
+      state.targetDist = Math.max(3.0, Math.min(8.0, pinchDist * (pinchStart / Math.max(d, 1))));
     }
   }, { passive: true });
   canvas.addEventListener('touchend', () => { pinchStart = 0; }, { passive: true });
@@ -360,10 +454,12 @@
   if (allBtn) allBtn.addEventListener('click', () => {
     PARTS.forEach(p => { p.target = 1; });
     state.auto = false; state.lastInteract = performance.now();
+    start();
   });
   if (resetBtn) resetBtn.addEventListener('click', () => {
     PARTS.forEach(p => { p.target = 0; });
     state.auto = true; state.lastInteract = performance.now();
+    start();
   });
 
   /* ---------- цикл ---------- */
@@ -402,15 +498,13 @@
     rafId = requestAnimationFrame(loop);
   }
 
-  if (location.hash === '#explode') {
-    PARTS.forEach(p => { p.target = 1; p.progress = 1; });
-    state.auto = false;
-  }
-
   document.addEventListener('ks-view', (e) => {
     if (e.detail === 'box') start(); else stop();
   });
 
-  if (allBtn) allBtn.addEventListener('click', start);
-  if (resetBtn) resetBtn.addEventListener('click', start);
+  if (location.hash === '#explode') {
+    PARTS.forEach(p => { p.target = 1; p.progress = 1; });
+    state.auto = false;
+    start();
+  }
 })();
