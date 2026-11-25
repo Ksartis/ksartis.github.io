@@ -219,13 +219,15 @@ button { font: inherit; cursor: pointer; }
   backdrop-filter: blur(6px);
 }
 .box-bar[hidden] { display: none !important; }
-.box-bar__parts { display: flex; gap: 6px; flex-wrap: wrap; }
+.box-bar__parts { display: flex; gap: 6px; flex-wrap: wrap; width: min(760px, 100%); margin-inline: auto; }
 .part-chip {
   border: 1px solid var(--line-strong); background: #fff; color: var(--ink-2);
   border-radius: 999px; padding: 6px 11px; font-size: 12px;
 }
 .part-chip.is-active { background: var(--ink); color: #fff; border-color: var(--ink); }
-.box-bar__row { display: flex; align-items: center; gap: 10px; }
+.part-chip.is-off { opacity: .45; border-style: dashed; }
+.part-chip.is-off.is-active { opacity: .75; }
+.box-bar__row { display: flex; align-items: center; gap: 10px; width: min(760px, 100%); margin-inline: auto; }
 .box-bar__name {
   font-family: var(--mono); font-size: 11px; letter-spacing: .06em;
   text-transform: uppercase; color: var(--muted); min-width: 92px;
@@ -244,10 +246,21 @@ canvas[hidden] { display: none !important; }
 }
 .viewer__fs:hover { border-color: var(--ink-2); }
 .viewer:fullscreen, .viewer.is-fs {
+  position: fixed; inset: 0; z-index: 90;
   width: 100vw; height: 100vh; aspect-ratio: auto;
   border-radius: 0; border: 0; box-shadow: none;
+  background: var(--bg);
 }
-.viewer:fullscreen .viewer__fs, .viewer.is-fs .viewer__fs { top: 16px; right: 150px; }
+.viewer:fullscreen #box-canvas, .viewer.is-fs #box-canvas { bottom: 0; }
+.viewer:fullscreen .box-bar, .viewer.is-fs .box-bar {
+  left: 50%; right: auto; bottom: 20px; transform: translateX(-50%);
+  width: min(760px, calc(100% - 32px));
+  border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: var(--shadow); padding: 10px 14px;
+}
+.viewer:fullscreen .viewer__fs, .viewer.is-fs .viewer__fs { top: 16px; right: 12px; }
+.viewer:fullscreen .viewer__tabs, .viewer.is-fs .viewer__tabs { right: 58px; }
+.box-bar__actions .btn[hidden] { display: none !important; }
 /* works */
 .filters { display: flex; gap: 8px; flex-wrap: wrap; }
 .chip {

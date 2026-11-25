@@ -270,15 +270,17 @@ function set3DView(view) {
   if (modelCanvas) modelCanvas.hidden = view !== 'model';
   if (boxCanvas) boxCanvas.hidden = view !== 'box';
   if (viewerHost) viewerHost.classList.toggle('is-box', view === 'box');
-  if (badge) badge.textContent = view === 'box' ? '3D · клик по детали' : '3D · вращайте';
+  if (badge) badge.textContent = view === 'box' ? '3D · тяните — поворот' : '3D · вращайте';
   document.dispatchEvent(new CustomEvent('ks-view', { detail: view }));
 }
 
 viewTabs.forEach(t => t.addEventListener('click', () => set3DView(t.dataset.view)));
 if (viewTabs.length) set3DView('model');
 
-// для проверки: /?view=box открывает разборку
+// параметры для проверки: /?view=box, /?fs=1
 const params = new URLSearchParams(location.search);
+if (params.get('fs') === '1' && viewerHost) viewerHost.classList.add('is-fs');
+
 if (params.get('view') === 'box') {
   set3DView('box');
   document.dispatchEvent(new CustomEvent('ks-explode'));
@@ -294,7 +296,9 @@ if (fsBtn) {
       if (document.fullscreenElement) {
         document.exitFullscreen && document.exitFullscreen();
       } else if (viewerHost.requestFullscreen) {
-        viewerHost.requestFullscreen().catch(() => {});
+        viewerHost.requestFullscreen().catch(() => { viewerHost.classList.toggle('is-fs'); });
+      } else {
+        viewerHost.classList.toggle('is-fs');
       }
     });
     document.addEventListener('fullscreenchange', () => {

@@ -176,7 +176,7 @@
       gl.bindBuffer(gl.ARRAY_BUFFER, norBuf);
       gl.bufferData(gl.ARRAY_BUFFER, p.normals, gl.STATIC_DRAW);
       return Object.assign({}, p, {
-        posBuf, norBuf, dir: conf.dir, max: conf.max, label: conf.label,
+        posBuf, norBuf, dir: conf.dir, max: conf.max, label: conf.label, visible: true,
         offset: 0, target: 0
       });
     });
@@ -224,6 +224,7 @@
     gl.uniform3fv(loc.uEye, eye);
 
     for (const p of PARTS) {
+      if (!p.visible) continue;
       const o = offsetVec(p);
       gl.uniform3fv(loc.uOffset, o);
       gl.uniform3fv(loc.uColor, p.color);
@@ -269,6 +270,7 @@
     if (!ray) return null;
     let best = null, bestT = Infinity;
     for (const p of PARTS) {
+      if (!p.visible) continue;
       const o = offsetVec(p);
       const c = [p.center[0] + o[0], p.center[1] + o[1], p.center[2] + o[2]];
       const t = rayBox(ray, c, p.size);
@@ -321,7 +323,34 @@
     }
     if (slider && syncSlider !== false) slider.value = String(Math.round(p.offset * 1000));
     if (sliderName) sliderName.textContent = p.label;
+    refreshVisibilityUI();
   }
+
+  const toggleBtn = document.getElementById('box-toggle-visible');
+  const showAllBtn = document.getElementById('box-show-all');
+
+  function refreshVisibilityUI() {
+    if (toggleBtn && selected) toggleBtn.textContent = selected.visible ? 'Скрыть' : 'Показать';
+    if (showAllBtn) showAllBtn.hidden = !PARTS.some(p => !p.visible);
+    if (chipsBox) {
+      Array.from(chipsBox.children).forEach(b => {
+        const p = PARTS.find(x => x.name === b.dataset.name);
+        b.classList.toggle('is-off', !!(p && !p.visible));
+      });
+    }
+  }
+
+  if (toggleBtn) toggleBtn.addEventListener('click', () => {
+    if (!selected) return;
+    selected.visible = !selected.visible;
+    refreshVisibilityUI();
+    start();
+  });
+  if (showAllBtn) showAllBtn.addEventListener('click', () => {
+    PARTS.forEach(p => { p.visible = true; });
+    refreshVisibilityUI();
+    start();
+  });
 
   if (slider) {
     slider.addEventListener('input', () => {
@@ -338,62 +367,47 @@
     const r = canvas.getBoundingClientRect();
     return { x: e.clientX - r.left, y: e.clientY - r.top, w: r.width, h: r.height };
   }
-  let drag = null;
 
   function onDown(e) {
-    const { x, y, w, h } = localXY(e);
-    const ndcX = (x / w) * 2 - 1, ndcY = 1 - (y / h) * 2;
-    const hit = pick(ndcX, ndcY);
+    state.mode = 'orbit';
     state.moved = 0;
     state.lastX = e.clientX; state.lastY = e.clientY;
     state.auto = false;
-    if (hit) {
-      select(hit, true);
-      state.mode = 'part';
-      const ax = axisScreenDir(hit);
-      drag = { part: hit, axis: ax, startOffset: hit.offset };
-      canvas.style.cursor = 'grabbing';
-    } else {
-      state.mode = 'orbit';
-      host.classList.add('is-dragging');
-    }
+    host.classList.add('is-dragging');
+    canvas.style.cursor = 'grabbing';
     canvas.setPointerCapture(e.pointerId);
   }
 
   function onMove(e) {
-    if (!state.mode) {
-      // курсор над деталью
+    if (state.mode !== 'orbit') {
       const { x, y, w, h } = localXY(e);
       const hit = pick((x / w) * 2 - 1, 1 - (y / h) * 2);
-      canvas.style.cursor = hit ? 'grab' : 'default';
+      canvas.style.cursor = hit ? 'pointer' : 'grab';
       return;
     }
     const dx = e.clientX - state.lastX, dy = e.clientY - state.lastY;
     state.lastX = e.clientX; state.lastY = e.clientY;
     state.moved += Math.abs(dx) + Math.abs(dy);
-
-    if (state.mode === 'part' && drag) {
-      const delta = dx * drag.axis.x + dy * drag.axis.y;
-      const perUnit = (drag.axis.len || 120);
-      const next = drag.startOffset + delta / perUnit;
-      drag.part.offset = Math.max(0, Math.min(1, next));
-      drag.part.target = drag.part.offset;
-      if (selected === drag.part && slider) slider.value = String(Math.round(drag.part.offset * 1000));
-    } else {
-      state.yaw -= dx * 0.008;
-      state.pitch = Math.max(-1.3, Math.min(1.3, state.pitch + dy * 0.008));
-    }
+    state.yaw -= dx * 0.008;
+    state.pitch = Math.max(-1.3, Math.min(1.3, state.pitch + dy * 0.008));
     state.lastInteract = performance.now();
   }
 
   function onUp(e) {
-    state.mode = null; drag = null;
+    const wasDrag = state.moved > 6;
+    state.mode = null;
     host.classList.remove('is-dragging');
-    canvas.style.cursor = 'default';
+    canvas.style.cursor = 'grab';
     try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
     state.lastInteract = performance.now();
-  }
 
+    if (wasDrag) return;
+
+    // клик без перетаскивания — выбрать деталь
+    const { x, y, w, h } = localXY(e);
+    const hit = pick((x / w) * 2 - 1, 1 - (y / h) * 2);
+    if (hit) select(hit, true);
+  }
   function onWheel(e) {
     e.preventDefault();
     state.auto = false;
