@@ -301,6 +301,14 @@
   const slider = document.getElementById('box-slider');
   const sliderName = document.getElementById('box-part-name');
 
+  // высота шторки -> отступ холста
+  const barEl = document.getElementById('box-bar');
+  function syncBarHeight() {
+    if (barEl) host.style.setProperty('--bar-h', barEl.offsetHeight + 'px');
+  }
+  if (barEl && 'ResizeObserver' in window) new ResizeObserver(syncBarHeight).observe(barEl);
+  window.addEventListener('resize', syncBarHeight);
+
   function buildChips() {
     if (!chipsBox) return;
     chipsBox.textContent = '';
@@ -331,7 +339,7 @@
 
   function refreshVisibilityUI() {
     if (toggleBtn && selected) toggleBtn.textContent = selected.visible ? 'Скрыть' : 'Показать';
-    if (showAllBtn) showAllBtn.hidden = !PARTS.some(p => !p.visible);
+    if (showAllBtn) showAllBtn.disabled = !PARTS.some(p => !p.visible);
     if (chipsBox) {
       Array.from(chipsBox.children).forEach(b => {
         const p = PARTS.find(x => x.name === b.dataset.name);
