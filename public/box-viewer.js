@@ -380,7 +380,7 @@
 
   function refreshVisibilityUI() {
     if (toggleBtn && selected) toggleBtn.textContent = selected.visible ? 'Скрыть' : 'Показать';
-    if (showAllBtn) showAllBtn.disabled = !PARTS.some(p => !p.visible);
+    if (showAllBtn) showAllBtn.disabled = !PARTS.some(p => !p.visible || p.alpha < 1);
     if (chipsBox) {
       Array.from(chipsBox.children).forEach(b => {
         const p = PARTS.find(x => x.name === b.dataset.name);
@@ -396,8 +396,9 @@
     start();
   });
   if (showAllBtn) showAllBtn.addEventListener('click', () => {
-    PARTS.forEach(p => { p.visible = true; });
+    PARTS.forEach(p => { p.visible = true; p.alpha = 1; });
     refreshVisibilityUI();
+    syncGhost();
     start();
   });
 
