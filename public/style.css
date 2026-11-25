@@ -397,8 +397,8 @@ canvas[hidden] { display: none !important; }
 @media (max-width: 560px) {
   .viewer.is-box #box-canvas { bottom: 172px; }
   .box-bar { overflow-y: auto; }
-  .box-bar__parts { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
-  .box-bar__parts::-webkit-scrollbar { display: none; }
+  .box-bar__parts { flex-wrap: wrap; }
+
   .box-bar__row { flex-wrap: wrap; }
   .box-bar__name { display: none; }
   .box-bar__actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
