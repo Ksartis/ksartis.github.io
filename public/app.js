@@ -258,7 +258,7 @@ async function loadSettings() {
 const viewTabs = $$('.viewer__tab');
 const modelCanvas = $('#viewer-canvas');
 const boxCanvas = $('#box-canvas');
-const boxTools = $('#box-tools');
+const viewerHost = document.getElementById('viewer');
 const badge = $('[data-badge]');
 
 function set3DView(view) {
@@ -269,7 +269,7 @@ function set3DView(view) {
   });
   if (modelCanvas) modelCanvas.hidden = view !== 'model';
   if (boxCanvas) boxCanvas.hidden = view !== 'box';
-  if (boxTools) boxTools.hidden = view !== 'box';
+  if (viewerHost) viewerHost.classList.toggle('is-box', view === 'box');
   if (badge) badge.textContent = view === 'box' ? '3D · клик по детали' : '3D · вращайте';
   document.dispatchEvent(new CustomEvent('ks-view', { detail: view }));
 }
@@ -281,10 +281,31 @@ if (viewTabs.length) set3DView('model');
 const params = new URLSearchParams(location.search);
 if (params.get('view') === 'box') {
   set3DView('box');
-  const all = document.getElementById('explode-all');
-  if (all) all.click();
+  document.dispatchEvent(new CustomEvent('ks-explode'));
 }
 
+/* ---------- полный экран ---------- */
+const fsBtn = $('#viewer-fs');
+if (fsBtn) {
+  if (!document.fullscreenEnabled && !viewerHost.requestFullscreen) {
+    fsBtn.hidden = true;
+  } else {
+    fsBtn.addEventListener('click', () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen && document.exitFullscreen();
+      } else if (viewerHost.requestFullscreen) {
+        viewerHost.requestFullscreen().catch(() => {});
+      }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      const on = !!document.fullscreenElement;
+      viewerHost.classList.toggle('is-fs', on);
+      fsBtn.textContent = on ? '✕' : '⤢';
+      fsBtn.title = on ? 'Свернуть' : 'На весь экран';
+      window.dispatchEvent(new Event('resize'));
+    });
+  }
+}
 /* ---------- init ---------- */
 const yearEl = $('#year');
 if (yearEl) yearEl.textContent = '© ' + new Date().getFullYear();

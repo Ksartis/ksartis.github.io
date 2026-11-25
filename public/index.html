@@ -22,7 +22,7 @@
 <meta name="twitter:image" content="https://ksartis.github.io/og-image.jpg">
 <link rel="canonical" href="https://ksartis.github.io/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="style.css?v=20261126b">
+<link rel="stylesheet" href="style.css?v=20261126c">
 </head>
 <body>
 <a class="skip" href="#works">Перейти к примерам работ</a>
@@ -63,6 +63,7 @@
         <ul class="hero__stats" data-stats>
           <li><b>8+</b><span>лет в профессии</span></li>
           <li><b>20+</b><span>компаний и заказчиков</span></li>
+          <li><b>300+</b><span>заказов</span></li>
         </ul>
       </div>
       <div class="hero__media">
@@ -71,15 +72,23 @@
           <canvas id="box-canvas" aria-label="3D-модель стержневого ящика" hidden></canvas>
 
           <span class="viewer__badge" data-badge>3D · вращайте</span>
+          <button class="viewer__fs" id="viewer-fs" type="button" aria-label="На весь экран" title="На весь экран">⤢</button>
 
           <div class="viewer__tabs" role="tablist" aria-label="3D-режим">
             <button class="viewer__tab is-active" type="button" data-view="model" role="tab" aria-selected="true">Модель</button>
             <button class="viewer__tab" type="button" data-view="box" role="tab" aria-selected="false">Разборка</button>
           </div>
 
-          <div class="viewer__tools" id="box-tools" hidden>
-            <button class="btn btn--accent btn--sm" id="explode-all" type="button">Разобрать</button>
-            <button class="btn btn--ghost btn--sm" id="explode-reset" type="button">Собрать</button>
+          <div class="box-bar" id="box-bar" hidden>
+            <div class="box-bar__parts" id="box-parts"></div>
+            <div class="box-bar__row">
+              <span class="box-bar__name" id="box-part-name">Деталь</span>
+              <input type="range" id="box-slider" min="0" max="1000" value="0" aria-label="Выдвинуть деталь">
+              <div class="box-bar__actions">
+                <button class="btn btn--accent btn--sm" id="explode-all" type="button">Разобрать</button>
+                <button class="btn btn--ghost btn--sm" id="explode-reset" type="button">Собрать</button>
+              </div>
+            </div>
           </div>
 
           <div class="viewer__fallback">
@@ -227,8 +236,8 @@
   </figure>
 </div>
 
-<script src="viewer.js?v=20261126b"></script>
-<script src="box-viewer.js?v=20261126b"></script>
-<script src="app.js?v=20261126b"></script>
+<script src="viewer.js?v=20261126c"></script>
+<script src="box-viewer.js?v=20261126c"></script>
+<script src="app.js?v=20261126c"></script>
 </body>
 </html>

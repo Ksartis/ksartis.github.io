@@ -6,5 +6,8 @@
   "scripts": {
     "dev": "node server/server.js",
     "start": "node server/server.js"
+  },
+  "dependencies": {
+    "manifold-3d": "^3.5.5"
   }
 }
