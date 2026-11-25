@@ -290,12 +290,12 @@ if (viewTabs.length) set3DView('model');
 // параметры для проверки: /?view=box, /?fs=1
 const params = new URLSearchParams(location.search);
 if (params.get('fs') === '1' && viewerHost) viewerHost.classList.add('is-fs');
-if (params.get('bar') === '0' && viewerHost) viewerHost.classList.add('is-bar-collapsed');
 
 if (params.get('view') === 'box') {
   set3DView('box');
   document.dispatchEvent(new CustomEvent('ks-explode'));
 }
+if (params.get('bar') === '1') document.dispatchEvent(new CustomEvent('ks-bar', { detail: false }));
 
 /* ---------- полный экран ---------- */
 const fsBtn = $('#viewer-fs');
