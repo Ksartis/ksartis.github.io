@@ -1,0 +1,94 @@
+{
+  "works": [
+    {
+      "id": "zatvor",
+      "title": "Затвор",
+      "category": "Брони и било",
+      "description": "Модель и отливка затвора: литниковая система, прибыли, виды детали и отливки. Проверка собираемости до запуска в производство.",
+      "image": "img/clean-01.jpg",
+      "order": 1,
+      "published": true
+    },
+    {
+      "id": "list-bronevoy",
+      "title": "Лист броневой",
+      "category": "Брони и било",
+      "description": "Броневая деталь для дробильного оборудования. Проработка припусков, уклонов и мест установки стержней.",
+      "image": "img/clean-02.jpg",
+      "order": 2,
+      "published": true
+    },
+    {
+      "id": "polzun",
+      "title": "Ползун",
+      "category": "Корпуса и станины",
+      "description": "Отливка ползуна с внутренними полостями: разъём, стержни, контроль толщин стенок.",
+      "image": "img/clean-03.jpg",
+      "order": 3,
+      "published": true
+    },
+    {
+      "id": "korpus-nasosa",
+      "title": "Корпус насоса",
+      "category": "Корпуса и станины",
+      "description": "Модельный комплект корпуса: модель, стержневые ящики, сборка. Согласование с технологией литья.",
+      "image": "img/clean-04.jpg",
+      "order": 4,
+      "published": true
+    },
+    {
+      "id": "sterzhnevye-yashiki",
+      "title": "Стержневые ящики",
+      "category": "Оснастка",
+      "description": "Комплект стержневых ящиков под отливку: разъёмы, знаки, вентиляция стержней.",
+      "image": "img/clean-05.jpg",
+      "order": 5,
+      "published": true
+    },
+    {
+      "id": "stanina",
+      "title": "Станина",
+      "category": "Корпуса и станины",
+      "description": "Крупногабаритная отливка: модель, ящики и порядок сборки оснастки. Увязка литниковой системы и прибылей.",
+      "image": "img/clean-06.jpg",
+      "order": 6,
+      "published": true
+    },
+    {
+      "id": "baraban",
+      "title": "Барабан",
+      "category": "Прочее",
+      "description": "Модель и технология отливки барабана: деталь, отливка, стержни и знаки.",
+      "image": "img/clean-07.jpg",
+      "order": 7,
+      "published": true
+    },
+    {
+      "id": "turachka",
+      "title": "Турачка лебёдки",
+      "category": "Корпуса и станины",
+      "description": "Отливка корпусной детали с прибылями и стержневыми знаками.",
+      "image": "img/clean-08.jpg",
+      "order": 8,
+      "published": true
+    },
+    {
+      "id": "kryshka",
+      "title": "Крышка",
+      "category": "Корпуса и станины",
+      "description": "Крышка с центральным отверстием: модель, прибыли, литниковая система.",
+      "image": "img/clean-09.jpg",
+      "order": 9,
+      "published": true
+    },
+    {
+      "id": "korpus-dn50",
+      "title": "Корпус DN 50",
+      "category": "Корпуса и станины",
+      "description": "Корпусная деталь с фланцами. Модель, разъём формы и сборка оснастки.",
+      "image": "img/clean-10.jpg",
+      "order": 10,
+      "published": true
+    }
+  ]
+}

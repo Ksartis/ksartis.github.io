@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Админка · ksartis</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/admin.css">
+</head>
+<body class="adm">
+
+<header class="adm__bar">
+  <div class="adm__wrap adm__bar-inner">
+    <div class="brand">
+      <span class="brand__mark">ks</span>
+      <span class="brand__name">админка</span>
+    </div>
+    <div class="adm__bar-actions">
+      <a class="adm__link" href="/" target="_blank" rel="noopener">Открыть сайт ↗</a>
+      <button class="adm__link" type="button" id="logout" hidden>Выйти</button>
+    </div>
+  </div>
+</header>
+
+<main class="adm__wrap">
+
+  <!-- login -->
+  <section id="login-view" class="adm__login" hidden>
+    <h1>Вход</h1>
+    <p class="adm__hint">Пароль задаётся в файле <code>.env</code> на компьютере.</p>
+    <form id="login-form" class="adm__login-form">
+      <label class="field">
+        <span>Пароль</span>
+        <input type="password" id="password" autocomplete="current-password" required>
+      </label>
+      <button class="btn btn--accent" type="submit">Войти</button>
+      <p class="adm__error" id="login-error" hidden></p>
+    </form>
+  </section>
+
+  <!-- app -->
+  <section id="app-view" hidden>
+    <div class="adm__tabs" role="tablist">
+      <button class="chip is-active" data-tab="works" type="button">Работы</button>
+      <button class="chip" data-tab="settings" type="button">Настройки</button>
+    </div>
+
+    <!-- works -->
+    <div id="tab-works">
+      <div class="adm__toolbar">
+        <button class="btn btn--accent" id="add-work" type="button">+ Добавить работу</button>
+        <button class="btn btn--ghost" id="save-works" type="button">Сохранить</button>
+        <span class="adm__status" id="works-status"></span>
+      </div>
+
+      <div id="works-list" class="adm__list"></div>
+      <p class="adm__hint">Фото: JPG, PNG или WEBP до 20 МБ. Порядок — число: меньше = выше на сайте.</p>
+    </div>
+
+    <!-- settings -->
+    <div id="tab-settings" hidden>
+      <div class="adm__toolbar">
+        <button class="btn btn--accent" id="save-settings" type="button">Сохранить настройки</button>
+        <span class="adm__status" id="settings-status"></span>
+      </div>
+
+      <div class="adm__grid2">
+        <label class="field"><span>Бренд</span><input type="text" id="s-brand"></label>
+        <label class="field"><span>Подпись (title)</span><input type="text" id="s-tagline"></label>
+      </div>
+
+      <label class="field"><span>Заголовок первого экрана</span><input type="text" id="s-hero-title"></label>
+      <label class="field"><span>Текст под заголовком</span><textarea id="s-hero-text" rows="2"></textarea></label>
+      <label class="field"><span>Обо мне</span><textarea id="s-about" rows="5"></textarea></label>
+
+      <h2 class="adm__h2">Контакты</h2>
+      <div class="adm__grid2">
+        <label class="field"><span>Telegram (ссылка)</span><input type="text" id="s-tg" placeholder="https://t.me/ksartis"></label>
+        <label class="field"><span>Telegram (подпись)</span><input type="text" id="s-tg-label" placeholder="@ksartis"></label>
+        <label class="field"><span>E-mail</span><input type="text" id="s-email"></label>
+        <label class="field"><span>WhatsApp (номер, пусто — скрыт)</span><input type="text" id="s-wa"></label>
+      </div>
+
+      <h2 class="adm__h2">Цифры</h2>
+      <div id="stats-list" class="adm__grid2"></div>
+    </div>
+  </section>
+
+</main>
+
+<script src="/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+# секреты
+.env
+.env.*
+!.env.example
+
+# зависимости и кеш
+node_modules/
+.wrangler/
+.cache/
+
+# временные файлы и снимки
+tools/*.png
+tools/*.jpg
+*.log
+.DS_Store
+Thumbs.db

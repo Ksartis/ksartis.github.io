@@ -1,0 +1,10 @@
+{
+  "name": "ksartis-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Сайт-визитка инженера-конструктора литейного производства",
+  "scripts": {
+    "dev": "node server/server.js",
+    "start": "node server/server.js"
+  }
+}

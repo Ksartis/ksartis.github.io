@@ -1,0 +1,14 @@
+name = "ksartis"
+compatibility_date = "2026-11-25"
+pages_build_output_dir = "public"
+
+# 1) Создать KV:      npx wrangler kv namespace create WORKS
+# 2) Вставить id ниже
+[[kv_namespaces]]
+binding = "WORKS"
+id = "ВСТАВЬТЕ_ID_KV"
+
+# 3) Создать R2:      npx wrangler r2 bucket create ksartis-images
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "ksartis-images"
