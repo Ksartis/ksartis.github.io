@@ -363,15 +363,28 @@
   }
 
   const barHandle = document.getElementById('box-toggle-bar');
+
+  function syncBarHandle() {
+    if (!barHandle) return;
+    const collapsed = host.classList.contains('is-bar-collapsed');
+    barHandle.textContent = collapsed ? '⌃' : '⌄';
+    barHandle.setAttribute('aria-expanded', String(!collapsed));
+    barHandle.setAttribute('aria-label', collapsed ? 'Развернуть панель' : 'Свернуть панель');
+  }
+
   if (barHandle) {
     barHandle.addEventListener('click', () => {
-      const collapsed = host.classList.toggle('is-bar-collapsed');
-      barHandle.textContent = collapsed ? '⌃' : '⌄';
-      barHandle.setAttribute('aria-expanded', String(!collapsed));
-      barHandle.setAttribute('aria-label', collapsed ? 'Развернуть панель' : 'Свернуть панель');
+      host.classList.toggle('is-bar-collapsed');
+      syncBarHandle();
       state.lastInteract = performance.now();
     });
   }
+
+  document.addEventListener('ks-bar', (e) => {
+    if (typeof e.detail !== 'boolean') return;
+    host.classList.toggle('is-bar-collapsed', e.detail);
+    syncBarHandle();
+  });
 
   /* ---------- мышь / тач ---------- */
   function localXY(e) {

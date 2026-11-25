@@ -1,5 +1,6 @@
 'use strict';
 
+const appState = { boxOpened: false };
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
@@ -277,6 +278,10 @@ function set3DView(view) {
       : (short ? '3D' : '3D · вращайте');
   }
   document.dispatchEvent(new CustomEvent('ks-view', { detail: view }));
+  if (view === 'box' && !appState.boxOpened) {
+    appState.boxOpened = true;
+    document.dispatchEvent(new CustomEvent('ks-bar', { detail: true }));
+  }
 }
 
 viewTabs.forEach(t => t.addEventListener('click', () => set3DView(t.dataset.view)));
