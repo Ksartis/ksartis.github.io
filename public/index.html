@@ -22,7 +22,7 @@
 <meta name="twitter:image" content="https://ksartis.github.io/og-image.jpg">
 <link rel="canonical" href="https://ksartis.github.io/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="style.css?v=20261127l">
+<link rel="stylesheet" href="style.css?v=20261127m">
 </head>
 <body>
 <a class="skip" href="#works">Перейти к примерам работ</a>
@@ -72,6 +72,10 @@
           <canvas id="box-canvas" aria-label="3D-модель стержневого ящика" hidden></canvas>
 
           <span class="viewer__badge" data-badge>3D · вращайте</span>
+          <div class="viewer__modes" id="view-modes" role="group" aria-label="Режим управления">
+            <button type="button" class="viewer__mode is-active" data-mode="orbit">Вращение</button>
+            <button type="button" class="viewer__mode" data-mode="pan">Перенос</button>
+          </div>
           <button class="viewer__fs" id="viewer-fs" type="button" aria-label="На весь экран" title="На весь экран">⤢</button>
 
           <div class="viewer__tabs" role="tablist" aria-label="3D-режим">
@@ -239,8 +243,8 @@
   </figure>
 </div>
 
-<script src="viewer.js?v=20261127l"></script>
-<script src="box-viewer.js?v=20261127l"></script>
-<script src="app.js?v=20261127l"></script>
+<script src="viewer.js?v=20261127m"></script>
+<script src="box-viewer.js?v=20261127m"></script>
+<script src="app.js?v=20261127m"></script>
 </body>
 </html>

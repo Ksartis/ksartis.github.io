@@ -187,12 +187,24 @@
   }
 
   /* ---------- камера ---------- */
-  const state = { yaw: 0.62, pitch: 0.34, dist: 4.2, targetDist: 4.2, dragging: false, lastX: 0, lastY: 0, moved: 0, mode: null, auto: true, lastInteract: 0 };
+  const state = { yaw: 0.62, pitch: 0.34, dist: 4.2, targetDist: 4.2, panX: 0, panY: 0, dragging: false, lastX: 0, lastY: 0, moved: 0, mode: null, auto: true, lastInteract: 0 };
+  let inputMode = 'orbit';
 
   function camera() {
     const cp = Math.cos(state.pitch), sp = Math.sin(state.pitch);
-    const eye = [state.dist * cp * Math.sin(state.yaw), state.dist * sp, state.dist * cp * Math.cos(state.yaw)];
-    const view = lookAt(eye, [0, 0, 0], [0, 1, 0]);
+    const dir = [cp * Math.sin(state.yaw), sp, cp * Math.cos(state.yaw)];
+    const base = [state.dist * dir[0], state.dist * dir[1], state.dist * dir[2]];
+    const v0 = lookAt(base, [0, 0, 0], [0, 1, 0]);
+    const right = [v0[0], v0[4], v0[8]];
+    const up = [v0[1], v0[5], v0[9]];
+    const off = [
+      right[0] * state.panX + up[0] * state.panY,
+      right[1] * state.panX + up[1] * state.panY,
+      right[2] * state.panX + up[2] * state.panY
+    ];
+    const eye = [base[0] + off[0], base[1] + off[1], base[2] + off[2]];
+    const center = [off[0], off[1], off[2]];
+    const view = lookAt(eye, center, [0, 1, 0]);
     const proj = perspective(34 * Math.PI / 180, canvas.width / Math.max(canvas.height, 1), 0.05, 60);
     return { eye, view, proj };
   }
@@ -401,7 +413,8 @@
   }
 
   function onDown(e) {
-    state.mode = 'orbit';
+    const panByMouse = e.button === 2 || e.button === 1 || (e.button === 0 && e.shiftKey);
+    state.mode = (panByMouse || inputMode === 'pan') ? 'pan' : 'orbit';
     state.moved = 0;
     state.lastX = e.clientX; state.lastY = e.clientY;
     state.auto = false;
@@ -420,8 +433,14 @@
     const dx = e.clientX - state.lastX, dy = e.clientY - state.lastY;
     state.lastX = e.clientX; state.lastY = e.clientY;
     state.moved += Math.abs(dx) + Math.abs(dy);
-    state.yaw -= dx * 0.008;
-    state.pitch = Math.max(-1.3, Math.min(1.3, state.pitch + dy * 0.008));
+    if (state.mode === 'pan') {
+      const k = state.dist * 0.0016;
+      state.panX -= dx * k;
+      state.panY += dy * k;
+    } else {
+      state.yaw -= dx * 0.008;
+      state.pitch = Math.max(-1.3, Math.min(1.3, state.pitch + dy * 0.008));
+    }
     state.lastInteract = performance.now();
   }
 
@@ -433,7 +452,7 @@
     try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
     state.lastInteract = performance.now();
 
-    if (wasDrag) return;
+    if (wasDrag || e.button === 2) return;
 
     // клик без перетаскивания — выбрать деталь
     const { x, y, w, h } = localXY(e);
@@ -454,7 +473,7 @@
   canvas.addEventListener('wheel', onWheel, { passive: false });
 
   /* пинч двумя пальцами */
-  let pinchStart = 0, pinchDist = 0, pinching = false;
+  let pinchStart = 0, pinchDist = 0, pinching = false, lastCx = 0, lastCy = 0;
   canvas.addEventListener('touchstart', (e) => {
     if (e.touches.length === 2) {
       pinching = true;
@@ -464,6 +483,8 @@
         e.touches[0].clientY - e.touches[1].clientY
       );
       pinchDist = state.targetDist;
+      lastCx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      lastCy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
       state.auto = false;
       state.lastInteract = performance.now();
     }
@@ -475,6 +496,12 @@
         e.touches[0].clientY - e.touches[1].clientY
       );
       state.targetDist = Math.max(2.8, Math.min(7.5, pinchDist * (pinchStart / Math.max(d, 1))));
+      const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      const k = state.dist * 0.0016;
+      state.panX -= (cx - lastCx) * k;
+      state.panY += (cy - lastCy) * k;
+      lastCx = cx; lastCy = cy;
       state.lastInteract = performance.now();
     }
   }, { passive: true });
@@ -529,6 +556,16 @@
 
   document.addEventListener('ks-view', (e) => {
     if (e.detail === 'box') { start(); if (bar) bar.hidden = false; } else { stop(); if (bar) bar.hidden = true; }
+  });
+
+  canvas.addEventListener('dblclick', () => {
+    state.yaw = 0.62; state.pitch = 0.34; state.targetDist = 4.2;
+    state.panX = 0; state.panY = 0; state.auto = true;
+  });
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  document.addEventListener('ks-mode', (e) => {
+    if (e.detail === 'pan' || e.detail === 'orbit') inputMode = e.detail;
   });
 
   fetch('models/corebox.glb')

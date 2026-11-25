@@ -170,11 +170,15 @@
   }
 
   /* ---------- сцена ---------- */
+  let inputMode = 'orbit';
   const state = {
     yaw: 0.7,
     pitch: 0.35,
     dist: 3.0,
     targetDist: 3.0,
+    panX: 0,
+    panY: 0,
+    panMode: false,
     vy: 0,
     vp: 0,
     auto: !reduceMotion,
@@ -205,12 +209,18 @@
     const aspect = canvas.width / Math.max(canvas.height, 1);
     const proj = perspective(35 * Math.PI / 180, aspect, 0.05, 50);
     const cp = Math.cos(state.pitch), sp = Math.sin(state.pitch);
-    const eye = [
-      state.dist * cp * Math.sin(state.yaw),
-      state.dist * sp,
-      state.dist * cp * Math.cos(state.yaw)
+    const base = [state.dist * cp * Math.sin(state.yaw), state.dist * sp, state.dist * cp * Math.cos(state.yaw)];
+    const v0 = lookAt(base, [0, 0, 0], [0, 1, 0]);
+    const right = [v0[0], v0[4], v0[8]];
+    const up = [v0[1], v0[5], v0[9]];
+    const off = [
+      right[0] * state.panX + up[0] * state.panY,
+      right[1] * state.panX + up[1] * state.panY,
+      right[2] * state.panX + up[2] * state.panY
     ];
-    const view = lookAt(eye, [0, 0, 0], [0, 1, 0]);
+    const eye = [base[0] + off[0], base[1] + off[1], base[2] + off[2]];
+    const center = [off[0], off[1], off[2]];
+    const view = lookAt(eye, center, [0, 1, 0]);
     const mvp = multiply(proj, view);
 
     gl.useProgram(prog);
@@ -273,6 +283,8 @@
 
   /* ---------- управление ---------- */
   function onDown(e) {
+    const panByMouse = e.button === 2 || e.button === 1 || (e.button === 0 && e.shiftKey);
+    state.panMode = panByMouse || inputMode === 'pan';
     state.dragging = true;
     state.auto = false;
     state.lastInteract = performance.now();
@@ -287,10 +299,16 @@
     const dy = e.clientY - state.lastY;
     state.lastX = e.clientX;
     state.lastY = e.clientY;
-    state.yaw -= dx * 0.008;
-    state.pitch += dy * 0.008;
-    state.vy = -dx * 0.0006;
-    state.vp = dy * 0.0006;
+    if (state.panMode) {
+      const k = state.dist * 0.0016;
+      state.panX -= dx * k;
+      state.panY += dy * k;
+    } else {
+      state.yaw -= dx * 0.008;
+      state.pitch += dy * 0.008;
+      state.vy = -dx * 0.0006;
+      state.vp = dy * 0.0006;
+    }
     state.lastInteract = performance.now();
   }
   function onUp(e) {
@@ -312,14 +330,16 @@
   canvas.addEventListener('pointercancel', onUp);
   canvas.addEventListener('wheel', onWheel, { passive: false });
   canvas.addEventListener('dblclick', () => {
-    state.yaw = 0.7; state.pitch = 0.35; state.targetDist = 3.0; state.auto = true;
+    state.yaw = 0.7; state.pitch = 0.35; state.targetDist = 3.0;
+    state.panX = 0; state.panY = 0; state.auto = true;
   });
 
   // touch: пинч
-  let pinchStart = 0;
-  let pinchDist = 0;
+  let pinchStart = 0, pinchDist = 0, lastCx = 0, lastCy = 0;
   canvas.addEventListener('touchstart', (e) => {
     if (e.touches.length === 2) {
+      lastCx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      lastCy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
       pinchStart = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
@@ -334,9 +354,20 @@
         e.touches[0].clientY - e.touches[1].clientY
       );
       state.targetDist = Math.max(1.8, Math.min(6.0, pinchDist * (pinchStart / Math.max(d, 1))));
+      const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      const k = state.dist * 0.0016;
+      state.panX -= (cx - lastCx) * k;
+      state.panY += (cy - lastCy) * k;
+      lastCx = cx; lastCy = cy;
     }
   }, { passive: true });
   canvas.addEventListener('touchend', () => { pinchStart = 0; }, { passive: true });
+
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+  document.addEventListener('ks-mode', (e) => {
+    if (e.detail === 'pan' || e.detail === 'orbit') inputMode = e.detail;
+  });
 
   /* ---------- загрузка ---------- */
   fetch(host.dataset.model || 'models/otvod.glb')
