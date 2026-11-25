@@ -424,7 +424,7 @@
   }
 
   function onMove(e) {
-    if (state.mode !== 'orbit') {
+    if (!state.mode) {
       const { x, y, w, h } = localXY(e);
       const hit = pick((x / w) * 2 - 1, 1 - (y / h) * 2);
       canvas.style.cursor = hit ? 'pointer' : 'grab';
@@ -452,7 +452,7 @@
     try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
     state.lastInteract = performance.now();
 
-    if (wasDrag || e.button === 2) return;
+    if (wasDrag || e.button === 2 || inputMode === 'pan') return;
 
     // клик без перетаскивания — выбрать деталь
     const { x, y, w, h } = localXY(e);

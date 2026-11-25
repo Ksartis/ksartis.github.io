@@ -22,7 +22,7 @@
 <meta name="twitter:image" content="https://ksartis.github.io/og-image.jpg">
 <link rel="canonical" href="https://ksartis.github.io/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="style.css?v=20261127m">
+<link rel="stylesheet" href="style.css?v=20261127n">
 </head>
 <body>
 <a class="skip" href="#works">Перейти к примерам работ</a>
@@ -73,8 +73,18 @@
 
           <span class="viewer__badge" data-badge>3D · вращайте</span>
           <div class="viewer__modes" id="view-modes" role="group" aria-label="Режим управления">
-            <button type="button" class="viewer__mode is-active" data-mode="orbit">Вращение</button>
-            <button type="button" class="viewer__mode" data-mode="pan">Перенос</button>
+            <button type="button" class="viewer__mode is-active" data-mode="orbit" title="Вращение" aria-label="Вращение">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 12a9 9 0 1 1-2.6-6.4"/>
+                <path d="M21 3v6h-6"/>
+              </svg>
+            </button>
+            <button type="button" class="viewer__mode" data-mode="pan" title="Перенос" aria-label="Перенос">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 3v18M3 12h18"/>
+                <path d="m9 6 3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/>
+              </svg>
+            </button>
           </div>
           <button class="viewer__fs" id="viewer-fs" type="button" aria-label="На весь экран" title="На весь экран">⤢</button>
 
@@ -243,8 +253,8 @@
   </figure>
 </div>
 
-<script src="viewer.js?v=20261127m"></script>
-<script src="box-viewer.js?v=20261127m"></script>
-<script src="app.js?v=20261127m"></script>
+<script src="viewer.js?v=20261127n"></script>
+<script src="box-viewer.js?v=20261127n"></script>
+<script src="app.js?v=20261127n"></script>
 </body>
 </html>

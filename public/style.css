@@ -145,8 +145,10 @@ button { font: inherit; cursor: pointer; }
 }
 .viewer__mode {
   border: 0; background: transparent; color: var(--ink-2);
-  font-size: 12px; padding: 6px 10px; border-radius: 999px;
+  width: 34px; height: 30px; padding: 0; border-radius: 999px;
+  display: grid; place-items: center;
 }
+.viewer__mode svg { width: 16px; height: 16px; display: block; }
 .viewer__mode.is-active { background: var(--ink); color: #fff; }
 .viewer__badge {
   position: absolute; top: 14px; left: 14px; z-index: 2;
